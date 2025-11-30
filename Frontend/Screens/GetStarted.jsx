@@ -7,12 +7,13 @@ import { Button } from "@react-navigation/elements";
 //   createStaticNavigation,
 //   useNavigation,
 // } from "@react-navigation/native";
-// import App from "./ChatPage";
+import App from "./ChatPage";
 import Login from "./Login";
 import { LinearGradient } from "expo-linear-gradient";
 import Auth from "./Auth";
 import SignUP from "./SignUP";
-import ChatPage from "./ChatPage";
+import OTPVerification from "../components/OTPVerification";
+// import ChatPage from "./ChatPage";
 
 const GetStarted = () => {
   const navigation = useNavigation();
@@ -97,10 +98,11 @@ function RootStack() {
   return (
     <Stack.Navigator initialRouteName="Get Started" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Get Started" component={GetStarted} />
-      <Stack.Screen name="ChatPage" component={ChatPage} />
+      <Stack.Screen name="ChatPage" component={App} />
       <Stack.Screen name="Auth" component={Auth} />
       <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="SignUP" component={SignUP} />
+      <Stack.Screen name="OTPVerification" component={OTPVerification} />
     </Stack.Navigator>
   );
 }

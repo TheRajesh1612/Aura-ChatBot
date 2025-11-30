@@ -1,13 +1,16 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, Image, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native'
+import { View, Text, TouchableOpacity, Image, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native'
 import { NavigationContainer, useNavigation } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient';
-import { faArrowLeft, faBarsStaggered, faBorderStyle, faEyeSlash, faHeadset, faPaperPlane, faSquarePlus } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faBarsStaggered, faBorderStyle, faEye, faEyeSlash, faHeadset, faPaperPlane, faSquarePlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 // import { styles } from './App';
 
 const SignUP = () => {
   const navigation = useNavigation();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     // name: "",
@@ -35,9 +38,10 @@ const SignUP = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const response = await fetch(
-        "https://concert-treated-config-ports.trycloudflare.com/api/users/signup",
+        "https://fun-qualifications-successful-basename.trycloudflare.com/api/users/signup",
         {
           method: "POST",
           headers: {
@@ -65,11 +69,14 @@ const SignUP = () => {
       console.log(error.message);
       console.error(error);
 
+    } finally {
+      setLoading(false);
     }
 
   }
   return (
     // Main container
+  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={{ width: "100%", height: "100%" }}>
       <LinearGradient
         colors={[
@@ -88,7 +95,9 @@ const SignUP = () => {
         <View style={styles.container}>
           {/* Top bar */}
           <View style={styles.topbar}>
-            <TouchableOpacity style={styles.topbarButton} onPress={() => navigation.goBack()}>
+            <TouchableOpacity style={styles.topbarButton} 
+            onPress={() => navigation.goBack()}
+            disabled={loading}>
               <FontAwesomeIcon icon={faArrowLeft} style={styles.icon} />
             </TouchableOpacity>
 
@@ -119,30 +128,87 @@ const SignUP = () => {
                 style={styles.image}
               />
             </View>
-            <KeyboardAvoidingView behavior={Platform.OS === "android" ? "position" : "height"} style={{ flex: 1 }}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "android" ? "position" : "height"} style={{ flex: 1 }}>
               {/* Input container */}
               <View style={styles.inputContainer}>
                 <View style={styles.inputArea}>
                   {/* <TextInput style={styles.input1} placeholder="" onSubmitEditing={handleSubmit} /> */}
-                  <TextInput style={styles.input1} placeholder="Email" keyboardType='email-address' value={formData.email} onChangeText={(text) => setFormData({ ...formData, email: text })} onSubmitEditing={handleSubmit} />
+                  <TextInput
+                    style={styles.input1}
+                    placeholder="Email"
+                    keyboardType='email-address'
+                    autoCapitalize='none'
+                    value={formData.email}
+                    onChangeText={(text) => setFormData({ ...formData, email: text })}
+                    editable={!loading} 
+                    />
+
                   <View style={styles.passwordInput}>
-                    <TextInput style={styles.input2} placeholder="Password" secureTextEntry={true} value={formData.password} onChangeText={(text) => setFormData({ ...formData, password: text })} onSubmitEditing={handleSubmit} />
-                    <FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: 12, }} />
+                    <TextInput
+                      style={styles.input2}
+                      placeholder="Password"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      value={formData.password}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, password: text })} 
+                        editable={!loading}
+                        />
+
+                    <TouchableOpacity
+                      onPress={() => setShowPassword((s) => !s)}
+                      style={{ paddingHorizontal: 12 }}
+                      disabled={loading}
+                    >
+                      <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} />
+                    </TouchableOpacity>
                   </View>
+
                   <View style={styles.passwordInput}>
-                    <TextInput style={styles.input2} placeholder="Confirm Password" secureTextEntry={true} value={formData.confirmPassword} onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })} onSubmitEditing={handleSubmit} />
-                    <FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: 12, }} />
+                    <TextInput
+                      style={styles.input2}
+                      placeholder="Confirm Password"
+                      secureTextEntry={!showConfirmPassword}
+                      autoCapitalize="none"
+                      value={formData.confirmPassword}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, confirmPassword: text })} 
+                        editable={!loading}
+                        />
+                    <TouchableOpacity
+                      onPress={() => setShowConfirmPassword((s) => !s)}
+                      style={{ paddingHorizontal: 12 }}
+                      disabled={loading}
+                    >
+                      <FontAwesomeIcon icon={showConfirmPassword ? faEye : faEyeSlash} />
+                    </TouchableOpacity>
                   </View>
                 </View>
+
                 <TouchableOpacity
                   style={styles.continueButton}
                   onPress={handleSubmit}
+                  disabled={loading}
                 >
                   <LinearGradient colors={["#a965f6ac", "#ab75eae1", "#7d34bdb1", "#5651d7e0"]}
                     start={[0, 1]}
                     end={[1, 0]}
-                    style={styles.Button}>
-                    <Text style={{ color: "white", fontFamily: "sans-serif", fontWeight: "bold", fontSize: 16 }}>Sign up</Text>
+                    style={styles.Button}
+                    >
+                      {loading ? (
+                        <ActivityIndicator size="small" color="white" />
+                      ) : (
+                    <Text 
+                    style={{ 
+                      color: "white", 
+                      fontFamily: "sans-serif", 
+                      fontWeight: "bold", 
+                      fontSize: 16 }}
+                      >
+                        Sign up
+                      </Text>
+                      )}
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -152,6 +218,7 @@ const SignUP = () => {
         </View>
       </LinearGradient >
     </View >
+  </TouchableWithoutFeedback>
   )
 }
 

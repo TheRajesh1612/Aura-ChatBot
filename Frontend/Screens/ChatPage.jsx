@@ -20,10 +20,21 @@ import {
   Alert, // Import Platform
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
+import { NavigationContainer, DrawerActions } from '@react-navigation/native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import Login from "./Login";
+import SignUP from "./SignUP";
+import Chat from "./GetStarted";
+
+const Drawer = createDrawerNavigator();
+
 
 function ChatPage() {
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
+  const navigation = useNavigation();
+
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [message, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [inputHeight, setInputHeight] = useState(40);
@@ -33,6 +44,7 @@ function ChatPage() {
 
 
   const scrollViewRef = useRef();
+
 
   // Scroll to bottom when a new message is added
   useEffect(() => {
@@ -136,7 +148,7 @@ function ChatPage() {
     setTimeout(async () => {
       try {
         const response = await fetch(
-          "https://concert-treated-config-ports.trycloudflare.com/chat",
+          "https://fun-qualifications-successful-basename.trycloudflare.com/chat",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -147,6 +159,8 @@ function ChatPage() {
         if (!response.ok) throw new Error("Network response not ok");
 
         const data = await response.json();
+        console.log(data);
+
 
         setMessages(prev =>
           prev.map(msg =>
@@ -279,6 +293,7 @@ function ChatPage() {
             <View style={styles.sidebar}>
               {/* Left Menu Button */}
               <TouchableOpacity style={styles.sidebarButton}>
+                {/* onPress={() => navigation.dispatch(DrawerActions.openDrawer())} */}
                 <FontAwesomeIcon icon={faBars} style={styles.icon} size={20} />
               </TouchableOpacity>
 
@@ -360,7 +375,9 @@ function ChatPage() {
     </View>
   );
 }
+
 export default ChatPage;
+
 
 const styles = StyleSheet.create({
   rootView: {
@@ -571,14 +588,17 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     backgroundColor: "#7e57c2",
-    padding: 12,
-    borderRadius: 15,
-    maxWidth: "80%",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    maxWidth: "85%",
+    borderRadius: 18,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    flexShrink: 1,
+    justifyContent: "center",
   },
   userMessageBubble: {
     backgroundColor: "#7e57c2",
@@ -587,11 +607,24 @@ const styles = StyleSheet.create({
   botMessageBubble: {
     backgroundColor: "#7e57c2",
     borderTopLeftRadius: 5,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    maxWidth: "85%",
   },
   userMessageText: {
     color: "white",
+    flexShrink: 1,
+    flexWrap: "wrap",
+    fontSize: 16,
+    lineHeight: 20,
+    textAlignVertical: "center",
   },
   botMessageText: {
     color: "white",
+    flexShrink: 1,
+    flexWrap: "wrap",
+    fontSize: 16,
+    lineHeight: 20,
+    textAlignVertical: "center",
   },
 });
