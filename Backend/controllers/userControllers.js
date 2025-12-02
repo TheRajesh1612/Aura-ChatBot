@@ -101,6 +101,26 @@ const loginUser = async (req, res) => {
   }
 };
 
+// Logout User
+const logoutUser = async (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ success: false, message: "Error logging out!" });
+      }
+      res.clearCookie("connect.sid");
+      return res
+        .status(200)
+        .json({ success: true, message: "Logout successful!" });
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // Request OTP for password reset
 const requestOTP = async (req, res) => {
   try {
@@ -274,6 +294,7 @@ const resetPassword = async (req, res) => {
 module.exports = {
   createUser,
   loginUser,
+  logoutUser,
   requestOTP,
   verifyOTP,
   resetPassword,

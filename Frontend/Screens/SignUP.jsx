@@ -41,7 +41,7 @@ const SignUP = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://fun-qualifications-successful-basename.trycloudflare.com/api/users/signup",
+        "https://accounts-thru-courses-gods.trycloudflare.com/api/users/signup",
         {
           method: "POST",
           headers: {

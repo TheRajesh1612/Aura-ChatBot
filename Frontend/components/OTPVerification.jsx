@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import ResetPassword from "./ResetPassword";
 
 const OTPVerification = () => {
   const navigation = useNavigation();
@@ -30,7 +31,7 @@ const OTPVerification = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://fun-qualifications-successful-basename.trycloudflare.com/api/users/verify-otp",
+        "https://accounts-thru-courses-gods.trycloudflare.com/api/users/verify-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -41,7 +42,7 @@ const OTPVerification = () => {
       console.log("verify-otp:", data);
       if (data.success) {
         Alert.alert("Success", data.message || "OTP verified");
-        navigation.navigate("ChatPage");
+        navigation.navigate("ResetPassword", { email, otp });
       } else {
         Alert.alert("Failed", data.message || "Invalid OTP");
       }
@@ -57,7 +58,7 @@ const OTPVerification = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://fun-qualifications-successful-basename.trycloudflare.com/api/users/request-otp",
+        "https://accounts-thru-courses-gods.trycloudflare.com/api/users/request-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

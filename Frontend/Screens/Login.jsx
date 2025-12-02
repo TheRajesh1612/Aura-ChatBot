@@ -45,7 +45,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://fun-qualifications-successful-basename.trycloudflare.com/api/users/login",
+        "https://accounts-thru-courses-gods.trycloudflare.com/api/users/login",
         {
           method: "POST",
           headers: {
@@ -62,7 +62,7 @@ const Login = () => {
       console.log("login response:", data);
       if (data.success === true) {
         Alert.alert("Success", data.message || "Logged in");
-        navigation.navigate("ChatPage");
+        navigation.navigate("ChatDrawer", { screen: "ChatPage", params: { email: formData.email, mode: "new"} });
       } else {
         Alert.alert("Login failed", data.message || "Invalid credentials");
       }
@@ -89,7 +89,7 @@ const Login = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://fun-qualifications-successful-basename.trycloudflare.com/api/users/request-otp",
+        "https://accounts-thru-courses-gods.trycloudflare.com/api/users/request-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

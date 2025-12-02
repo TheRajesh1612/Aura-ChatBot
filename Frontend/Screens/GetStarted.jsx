@@ -2,23 +2,23 @@ import React from "react";
 import { Text, TouchableOpacity, View, StyleSheet, Image } from "react-native";
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createDrawerNavigator } from "@react-navigation/drawer";
 import { Button } from "@react-navigation/elements";
-// import {
-//   createStaticNavigation,
-//   useNavigation,
-// } from "@react-navigation/native";
-import App from "./ChatPage";
+import ChatPage from "./ChatPage";
 import Login from "./Login";
 import { LinearGradient } from "expo-linear-gradient";
 import Auth from "./Auth";
 import SignUP from "./SignUP";
 import OTPVerification from "../components/OTPVerification";
-// import ChatPage from "./ChatPage";
+import ResetPassword from "../components/ResetPassword";
+import CustomDrawer from "../components/CustomDrawer";
+
+const Drawer = createDrawerNavigator();
+const Stack = createNativeStackNavigator();
 
 const GetStarted = () => {
   const navigation = useNavigation();
   return (
-    // Main container
     <View style={styles.container}>
       <LinearGradient
         colors={[
@@ -32,9 +32,6 @@ const GetStarted = () => {
         ]}
         style={styles.gradientContainer}
       >
-        {/* Image container */}
-        {/* <View style={styles.getStartedContainer}> */}
-
         <View style={styles.imageContainer}>
           <View style={styles.originalImage}>
             <Image
@@ -53,11 +50,8 @@ const GetStarted = () => {
             />
           </View>
         </View>
-        {/* </View> */}
 
-        {/* Content container */}
         <View style={styles.contentContainer}>
-          {/* Text content */}
           <View style={styles.textContent}>
             <Text style={styles.text1}>Secure & Private</Text>
             <Text style={styles.text2}>
@@ -65,17 +59,17 @@ const GetStarted = () => {
             </Text>
           </View>
 
-          {/* Button container */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               onPress={() => navigation.navigate("Auth")}
               style={styles.button1}
             >
-              <LinearGradient colors={["#a965f6ac", "#ab75eae1", "#7d34bdb1", "#5651d7e0"]}
+              <LinearGradient
+                colors={["#a965f6ac", "#ab75eae1", "#7d34bdb1", "#5651d7e0"]}
                 start={[0, 1]}
                 end={[1, 0]}
-                style={styles.buttonGradient}>
-
+                style={styles.buttonGradient}
+              >
                 <Text style={{ color: "white", fontWeight: "bold" }}>Get Started</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -92,17 +86,31 @@ const GetStarted = () => {
   );
 };
 
-const Stack = createNativeStackNavigator();
+function ChatDrawer() {
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawer {...props} />}
+      screenOptions={{ headerShown: false }}
+      drawerType="slide"
+      drawerStyle={{ width: 300 }}
+    >
+      <Drawer.Screen name="ChatPage" component={ChatPage} options={{
+        gestureEnabled: false,
+      }}/>
+    </Drawer.Navigator>
+  );
+}
 
 function RootStack() {
   return (
     <Stack.Navigator initialRouteName="Get Started" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Get Started" component={GetStarted} />
-      <Stack.Screen name="ChatPage" component={App} />
       <Stack.Screen name="Auth" component={Auth} />
       <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="SignUP" component={SignUP} />
       <Stack.Screen name="OTPVerification" component={OTPVerification} />
+      <Stack.Screen name="ResetPassword" component={ResetPassword} />
+      <Stack.Screen name="ChatDrawer" component={ChatDrawer} />
     </Stack.Navigator>
   );
 }
@@ -128,9 +136,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-evenly",
     gap: 50
-  },
-  getStartedContainer: {
-    display: "flex",
   },
   imageContainer: {
     width: 200,
@@ -186,7 +191,6 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     transform: [{ scaleY: -1 }],
     opacity: 0.5,
-    // marginTop: -5,
   },
   contentContainer: {
     width: "100%",
@@ -225,7 +229,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 10,
-
   },
   button1: {
     color: "white",
@@ -245,7 +248,6 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 12,
     display: "flex",
-    // flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",

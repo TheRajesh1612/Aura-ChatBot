@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
-  faBars, // Used for the left menu icon
-  faCirclePlus, // Used for the top right icon and the bottom left button
+  faBars,
+  faCirclePlus,
   faMicrophone,
   faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
@@ -13,160 +13,152 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Keyboard, // Import Keyboard
-  KeyboardAvoidingView, // Import KeyboardAvoidingView
+  Keyboard,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert, // Import Platform
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "@react-navigation/native";
-import { NavigationContainer, DrawerActions } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import Login from "./Login";
-import SignUP from "./SignUP";
-import Chat from "./GetStarted";
-
-const Drawer = createDrawerNavigator();
+import { DrawerActions } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 function ChatPage() {
-
   const navigation = useNavigation();
+  const route = useRoute();
+  const userEmail = route.params?.email || "user@example.com";
+  const mode = route.params?.mode || "new"; // "new" or "continue"
+  const chatIdFromParams = route.params?.chatId; // only for "continue" mode
 
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [message, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [inputHeight, setInputHeight] = useState(40);
+  const [currentChatId, setCurrentChatId] = useState(chatIdFromParams || Date.now());
 
-  const MAX_HEIGHT = 120; //max height for the input box
-  const MIN_HEIGHT = 40; //min height for the input box
-
+  const MAX_HEIGHT = 120;
+  const MIN_HEIGHT = 40;
 
   const scrollViewRef = useRef();
 
+  // load messages if continuing a chat
+  useEffect(() => {
+    const loadExistingChat = async () => {
+      if (mode === "continue" && chatIdFromParams && userEmail) {
+        try {
+          const key = `chatMessages_${userEmail}_${chatIdFromParams}`;
+          const stored = await AsyncStorage.getItem(key);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            setMessages(parsed);
+          }
+        } catch (e) {
+          console.log("Error loading existing chat", e);
+        }
+      }
+    };
 
-  // Scroll to bottom when a new message is added
+    loadExistingChat();
+  }, [mode, chatIdFromParams, userEmail]);
+
   useEffect(() => {
     if (message.length > 0) {
-      scrollViewRef.current.scrollToEnd({ animated: true });
+      scrollViewRef.current?.scrollToEnd({ animated: true });
     }
   }, [message]);
 
-  // Message Sending Logic
-  // const handleSend = () => {
-  //   if (inputText.trim() === "") {
-  //     return;
-  //   }
-
-  //   // Add user message immediately
-  //   const sendMessage = async () => {
-
-  //     const userMessageId = Date.now();
-  //     const typingMessageId = `typing-${Date.now()}`;
-
-  //     setMessages((prevMessage) => [
-  //       ...prevMessage,
-  //       {
-  //         text: inputText,
-  //         sender: "user",
-  //         id: userMessageId,
-  //       },
-  //       { text: "Typing...", sender: "bot", id: typingMessageId }
-  //     ]);
-
-  //     // Generate the response from the bot with some delay
-  //     setTimeout(async () => {
-  //       try {
-  //         const response = await fetch(
-  //           "https://alleged-sporting-staff-villages.trycloudflare.com/chat",
-  //           {
-  //             method: "POST",
-  //             headers: {
-  //               "Content-Type": "application/json",
-  //             },
-  //             body: JSON.stringify({
-  //               message: inputText,
-  //             }),
-  //           }
-  //         );
-
-  //         if (!response.ok) {
-  //           throw new Error("Network response was not ok");
-  //         }
-
-  //         const data = await response.json();
-
-  //         console.log(data);
-  //         if (data && data.text) {
-  //           const botMessage = {
-  //             text: data.text,
-  //             sender: "bot",
-  //             id: Date.now(),
-  //           };
-  //           setMessages((prevMessage) => prevMessage.map(msg => msg.id === botMessage.id ? botMessage : msg));
-  //         } else {
-  //           setMessages((prevMessage) =>
-  //             prevMessage.map(msg => msg.id === typingMessageId ?
-  //               { text: "No response from sever.", sender: "bot", id: Date.now() } : msg)
-  //           );
-  //           Alert.alert("Error", "No response from the server.", [
-  //             { text: "OK", onPress: () => console.log("OK Pressed") },
-  //           ]);
-  //         }
-
-  //       } catch (error) {
-  //         console.log(error.message);
-  //         console.error(error);
-  //       }
-  //     }, 2000); // Delay for 2 seconds
-  //   };
-  //   sendMessage();
-  //   setInputText("");
-  // };
-
   const handleContentSizeChange = (event) => {
     const { contentSize } = event.nativeEvent;
-    const newHeight = Math.min(Math.max(contentSize.height, MIN_HEIGHT), MAX_HEIGHT);
+    const newHeight = Math.min(
+      Math.max(contentSize.height, MIN_HEIGHT),
+      MAX_HEIGHT
+    );
     setInputHeight(newHeight);
-  }
+  };
+
+  const saveChatToHistory = async (userEmail, newChat) => {
+    try {
+      const key = `chatHistory_${userEmail}`;
+      const existing = await AsyncStorage.getItem(key);
+      const parsed = existing ? JSON.parse(existing) : [];
+      const updated = [newChat, ...parsed]; // latest first
+      await AsyncStorage.setItem(key, JSON.stringify(updated));
+    } catch (e) {
+      console.log('Error saving chat history', e);
+    }
+  };
+
+  const saveMessagesForChat = async (userEmail, chatId, messagesArray) => {
+    try {
+      const key = `chatMessages_${userEmail}_${chatId}`;
+      await AsyncStorage.setItem(key, JSON.stringify(messagesArray));
+    } catch (e) {
+      console.log("Error saving chat messages", e);
+    }
+  };
+
+
 
   const handleSend = () => {
     if (inputText.trim() === "") return;
 
-    const typingId = `typing-${Date.now()}`;
-    setMessages(prev => [
+    const userMessageId = Date.now();
+    const typingId = `typing-${userMessageId}`;
+
+    setMessages((prev) => [
       ...prev,
-      { text: inputText, sender: "user", id: Date.now() },
-      { text: "Typing...", sender: "bot", id: typingId }
+      { text: inputText, sender: "user", id: userMessageId },
+      { text: "Typing...", sender: "bot", id: typingId },
     ]);
 
     setInputText("");
     setInputHeight(MIN_HEIGHT);
 
+    const thisChatId = currentChatId; // capture
 
     setTimeout(async () => {
       try {
         const response = await fetch(
-          "https://fun-qualifications-successful-basename.trycloudflare.com/chat",
+          "https://accounts-thru-courses-gods.trycloudflare.com/chat",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: inputText })
+            body: JSON.stringify({ message: inputText }),
           }
         );
 
         if (!response.ok) throw new Error("Network response not ok");
 
         const data = await response.json();
-        console.log(data);
 
+        // 1) Update messages state
+        setMessages((prev) => {
+          const updated = prev.map((msg) =>
+            msg.id === typingId
+              ? {
+                text: data.text || "No response",
+                sender: "bot",
+                id: Date.now(),
+              }
+              : msg
+          );
 
-        setMessages(prev =>
-          prev.map(msg =>
-            msg.id === typingId ? { text: data.text || "No response", sender: "bot", id: Date.now() } : msg
-          )
-        );
+          // 2) Persist full messages for this chat
+          saveMessagesForChat(userEmail, thisChatId, updated);
+          return updated;
+        });
+
+        // 3) Save / update summary in chatHistory
+        const newChatSummary = {
+          id: thisChatId,
+          title: inputText.slice(0, 30) || "New chat",
+          date: new Date().toISOString().slice(0, 10),
+          preview: (data.text || "No response").slice(0, 50),
+        };
+        await saveChatToHistory(userEmail, newChatSummary);
+        navigation.setParams({ needsRefreshHistory: Date.now() }); // notify drawer to refresh
       } catch (error) {
         console.error(error);
         Alert.alert("Error", "Failed to fetch bot response.");
@@ -174,10 +166,7 @@ function ChatPage() {
     }, 2000);
   };
 
-
-  // Keyboard Listeners to manage content visibility
   useEffect(() => {
-    // Use 'keyboardWillShow'/'keyboardWillHide' for smoother iOS transition
     const showEvent =
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
     const hideEvent =
@@ -220,7 +209,7 @@ function ChatPage() {
       </View>
     );
   };
-  // Conditional Rendering for Main Content Area
+
   const renderMessageArea = () => {
     if (message.length > 0) {
       return (
@@ -240,13 +229,9 @@ function ChatPage() {
       );
     }
 
-    // Conditional rendering for the bot's greeting/image area
-
-    // Hide the image and greeting text when the keyboard is open
     if (message.length === 0 && !isKeyboardOpen) {
       return (
         <View style={styles.content}>
-          {/* Bot Image */}
           <View style={styles.imageContainer}>
             <Image
               source={{
@@ -255,7 +240,6 @@ function ChatPage() {
               style={styles.image}
             />
           </View>
-          {/* Bot Greeting Text - Changed to "Fisca" */}
           <View style={styles.textContent}>
             <Text style={styles.text1}>Hi, I'm Aura</Text>
             <Text style={styles.text2}>How can I help you today?</Text>
@@ -281,46 +265,42 @@ function ChatPage() {
         ]}
         style={styles.gradientContainer}
       >
-
         <KeyboardAvoidingView
           style={styles.keyboardAvoidingView}
-          // Use 'padding' for iOS and 'height' for Android to handle keyboard shift
           behavior={Platform.OS === "android" ? "padding" : "height"}
           keyboardVerticalOffset={0}
         >
           <View style={styles.container}>
-            {/* Top container (Sidebar) - Remains visible */}
             <View style={styles.sidebar}>
-              {/* Left Menu Button */}
-              <TouchableOpacity style={styles.sidebarButton}>
-                {/* onPress={() => navigation.dispatch(DrawerActions.openDrawer())} */}
+              {/* LEFT MENU BUTTON - Opens Drawer */}
+              <TouchableOpacity
+                style={styles.sidebarButton}
+                onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+              >
                 <FontAwesomeIcon icon={faBars} style={styles.icon} size={20} />
               </TouchableOpacity>
 
               <Text style={styles.chatTitle}>New Chat</Text>
 
-              {/* Right New Chat Button */}
-              <TouchableOpacity style={styles.sidebarButton}>
-                <FontAwesomeIcon
-                  icon={faCirclePlus}
-                  style={styles.icon}
-                  size={20}
-                />
+              <TouchableOpacity
+                style={styles.sidebarButton}
+                onPress={() => {
+                  const newId = Date.now();
+                  setMessages([]);
+                  setCurrentChatId(newId);
+                  navigation.setParams({ ...route.params, mode: "new", chatId: newId });
+                }}
+              >
+                <FontAwesomeIcon icon={faCirclePlus} style={styles.icon} size={20} />
               </TouchableOpacity>
+
             </View>
 
-            {/* Conditionally rendered Greeting Content */}
             {renderMessageArea()}
           </View>
 
-          {/* Input container (Frosted Glass Effect at bottom) 
-                This view is now positioned relative to the KAV and will move up
-            */}
           <View style={styles.inputContainer}>
-            {/* Input Area (Text input and internal Send button) */}
             <View style={styles.inputArea}>
-
-              {/* Plus Button */}
               <TouchableOpacity style={styles.bottomBarButton}>
                 <FontAwesomeIcon
                   icon={faCirclePlus}
@@ -329,7 +309,6 @@ function ChatPage() {
                 />
               </TouchableOpacity>
 
-              {/* Text Input Area*/}
               <TextInput
                 style={[styles.input, { height: inputHeight }]}
                 placeholder="Ask me anything?"
@@ -341,9 +320,12 @@ function ChatPage() {
                 scrollEnabled={inputHeight >= MAX_HEIGHT}
                 onContentSizeChange={handleContentSizeChange}
               />
-              {/* Send Button (Purple arrow inside the box) */}
+
               <TouchableOpacity
-                style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+                style={[
+                  styles.sendButton,
+                  !inputText.trim() && styles.sendButtonDisabled,
+                ]}
                 onPress={handleSend}
                 disabled={!inputText.trim()}
               >
@@ -354,21 +336,6 @@ function ChatPage() {
                 />
               </TouchableOpacity>
             </View>
-
-            {/* Utility Input Buttons (+ and Mic buttons below the input) */}
-            {/* {!isKeyboardOpen && (
-              <View style={styles.inputButtons}>
-
-
-                <TouchableOpacity style={styles.bottomBarButton}>
-                  <FontAwesomeIcon
-                    icon={faMicrophone}
-                    style={styles.bottomBarIcon}
-                    size={22}
-                  />
-                </TouchableOpacity>
-              </View>
-            )} */}
           </View>
         </KeyboardAvoidingView>
       </LinearGradient>
@@ -377,6 +344,8 @@ function ChatPage() {
 }
 
 export default ChatPage;
+
+// ... keep all your existing styles
 
 
 const styles = StyleSheet.create({

@@ -7,7 +7,8 @@ import NavigationContainer, {
 import { LinearGradient } from "expo-linear-gradient";
 import { Checkbox } from 'expo-checkbox';
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faApple, faUnlockKeyhole, faGoogle } from "@fortawesome/free-solid-svg-icons";
+import { faUnlockKeyhole } from "@fortawesome/free-solid-svg-icons";
+import { faApple ,faGoogle } from "@fortawesome/free-brands-svg-icons";
 
 const Auth = () => {
   const navigation = useNavigation();
@@ -79,13 +80,13 @@ const Auth = () => {
 
               {/* Continue with Google */}
               <TouchableOpacity style={styles.Button}>
-                {/* <FontAwesomeIcon icon={faApple} /> */}
+                <FontAwesomeIcon icon={faApple} style={{ marginRight: 10, color: "#000000" }} />
                 <Text style={styles.buttonText}>Continue with Apple</Text>
               </TouchableOpacity>
 
               {/* Continue with Facebook */}
               <TouchableOpacity style={styles.Button}>
-                {/* <FontAwesomeIcon icon={faGoogle} /> */}
+                <FontAwesomeIcon icon={faGoogle} style={{ marginRight: 10, color: "#DB4437" }}/>
                 <Text style={styles.buttonText}>Continue with Google</Text>
               </TouchableOpacity>
 
