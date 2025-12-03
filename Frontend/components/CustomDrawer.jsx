@@ -1,5 +1,5 @@
 // CustomDrawer.js
-import React, { useState, useEffect, useCallback, use } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,21 +14,19 @@ import {
   faMessage,
   faRightFromBracket,
   faUser,
+  faTrash, // NEW: Import trash icon
 } from "@fortawesome/free-solid-svg-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CustomDrawer = (props) => {
-  // Correct prop handling
   const { navigation, state } = props;
 
   const [chatHistory, setChatHistory] = useState([]);
-  const [userEmail, setUserEmail] = useState("user@example.com"); // fallback
+  const [userEmail, setUserEmail] = useState("user@example.com");
 
-  // helper: extract email from drawer/navigation state safely
   const extractParamsFromState = (drawerState) => {
     try {
       const activeDrawerRoute = drawerState?.routes?.[drawerState.index];
-
       const nestedState = activeDrawerRoute?.state;
       const nestedActiveRoute = nestedState?.routes?.[nestedState?.index ?? 0];
 
@@ -55,14 +53,10 @@ const CustomDrawer = (props) => {
     }
   };
 
-
-
-  // Load chat history once (you had this before)
   useEffect(() => {
     loadChatHistory();
   }, []);
 
-  // Update userEmail whenever drawer state changes (or on mount)
   useEffect(() => {
     const { email, needsRefreshHistory } = extractParamsFromState(state);
 
@@ -71,7 +65,6 @@ const CustomDrawer = (props) => {
     }
 
     if (needsRefreshHistory) {
-      // whenever this changes, reload history
       if (userEmail && userEmail !== "user@example.com") {
         loadChatHistory();
       }
@@ -99,6 +92,51 @@ const CustomDrawer = (props) => {
     }
   };
 
+  // NEW: Delete chat handler
+  const handleDeleteChat = (chatId, chatTitle) => {
+    navigation.closeDrawer();
+
+    Alert.alert(
+      "Delete Chat",
+      `Are you sure you want to delete "${chatTitle}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Filter out the deleted chat
+              const updatedHistory = chatHistory.filter(
+                (chat) => chat.id !== chatId
+              );
+
+              // Update state
+              setChatHistory(updatedHistory);
+
+              // Update AsyncStorage
+              const key = `chatHistory_${userEmail}`;
+              await AsyncStorage.setItem(key, JSON.stringify(updatedHistory));
+
+              // Optional: Also delete the chat messages from storage
+              const chatMessagesKey = `chat_${userEmail}_${chatId}`;
+              await AsyncStorage.removeItem(chatMessagesKey);
+
+              // Show success message
+              Alert.alert("Success", "Chat deleted successfully");
+            } catch (error) {
+              console.error("Error deleting chat:", error);
+              Alert.alert("Error", "Failed to delete chat");
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   const handleChatSelect = (chatId) => {
     console.log("Selected chat:", chatId);
@@ -111,7 +149,6 @@ const CustomDrawer = (props) => {
     });
   };
 
-
   const handleLogout = () => {
     navigation.closeDrawer();
     Alert.alert(
@@ -123,19 +160,25 @@ const CustomDrawer = (props) => {
           text: "Logout",
           onPress: async () => {
             try {
-              // TODO: Call your logout API if needed
-              await fetch("https://accounts-thru-courses-gods.trycloudflare.com/api/users/logout", {
-                method: "POST",
-                credentials: "include", // include cookies if using sessions
-              });
-              // Reset navigation stack to Auth screen only
+              await fetch(
+                "https://being-def-bolt-explained.trycloudflare.com/api/users/logout",
+                {
+                  method: "POST",
+                  credentials: "include",
+                }
+              );
               navigation.reset({
                 index: 0,
                 routes: [{ name: "Auth" }],
               });
             } catch (error) {
               console.error("Logout error:", error);
-              Alert.alert("Error", "Failed to logout", [{ style: "destructive" }], { cancelable: true });
+              Alert.alert(
+                "Error",
+                "Failed to logout",
+                [{ style: "destructive" }],
+                { cancelable: true }
+              );
             }
           },
           style: "destructive",
@@ -157,27 +200,45 @@ const CustomDrawer = (props) => {
         </View>
 
         {/* Chat History List */}
-        <ScrollView style={styles.chatList} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.chatList}
+          showsVerticalScrollIndicator={false}
+        >
           {chatHistory.length > 0 ? (
             chatHistory.map((chat) => (
-              <TouchableOpacity
-                key={chat.id}
-                style={styles.chatItem}
-                onPress={() => handleChatSelect(chat.id)}
-              >
-                <View style={styles.chatItemIcon}>
-                  <FontAwesomeIcon icon={faMessage} size={16} color="#7e57c2" />
-                </View>
-                <View style={styles.chatItemContent}>
-                  <Text style={styles.chatItemTitle} numberOfLines={1}>
-                    {chat.title}
-                  </Text>
-                  <Text style={styles.chatItemPreview} numberOfLines={1}>
-                    {chat.preview}
-                  </Text>
-                  <Text style={styles.chatItemDate}>{chat.date}</Text>
-                </View>
-              </TouchableOpacity>
+              <View key={chat.id} style={styles.chatItemWrapper}>
+                <TouchableOpacity
+                  style={styles.chatItem}
+                  onPress={() => handleChatSelect(chat.id)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.chatItemIcon}>
+                    <FontAwesomeIcon
+                      icon={faMessage}
+                      size={16}
+                      color="#7e57c2"
+                    />
+                  </View>
+                  <View style={styles.chatItemContent}>
+                    <Text style={styles.chatItemTitle} numberOfLines={1}>
+                      {chat.title}
+                    </Text>
+                    <Text style={styles.chatItemPreview} numberOfLines={1}>
+                      {chat.preview}
+                    </Text>
+                    <Text style={styles.chatItemDate}>{chat.date}</Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* NEW: Delete Button */}
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteChat(chat.id, chat.title)}
+                  activeOpacity={0.7}
+                >
+                  <FontAwesomeIcon icon={faTrash} size={16} color="#ff6b6b" />
+                </TouchableOpacity>
+              </View>
             ))
           ) : (
             <View style={styles.emptyState}>
@@ -206,7 +267,11 @@ const CustomDrawer = (props) => {
               end={[1, 1]}
               style={styles.logoutGradient}
             >
-              <FontAwesomeIcon icon={faRightFromBracket} size={18} color="white" />
+              <FontAwesomeIcon
+                icon={faRightFromBracket}
+                size={18}
+                color="white"
+              />
               <Text style={styles.logoutText}>Logout</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -217,29 +282,51 @@ const CustomDrawer = (props) => {
 };
 
 const styles = StyleSheet.create({
-  drawerContainer: { flex: 1 },
-  drawerContent: { flex: 1, paddingTop: 60 },
+  drawerContainer: { 
+    flex: 1 
+  },
+  drawerContent: { 
+    flex: 1, 
+    paddingTop: 60 
+  },
   drawerHeader: {
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#ffffff40",
   },
-  drawerTitle: { fontSize: 24, fontWeight: "bold", color: "#4a148c" },
-  chatList: { flex: 1, paddingHorizontal: 10, paddingTop: 10 },
+  drawerTitle: { 
+    fontSize: 24, 
+    fontWeight: "bold", 
+    color: "#4a148c" 
+  },
+  chatList: { 
+    flex: 1, 
+    paddingHorizontal: 10, 
+    paddingTop: 10 
+  },
+
+  // NEW: Wrapper for chat item + delete button
+  chatItemWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    marginHorizontal: 10,
+  },
+
   chatItem: {
+    flex: 1,
     flexDirection: "row",
     backgroundColor: "white",
     borderRadius: 12,
     padding: 12,
-    marginBottom: 10,
-    marginHorizontal: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
+
   chatItemIcon: {
     width: 40,
     height: 40,
@@ -249,13 +336,58 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  chatItemContent: { flex: 1 },
-  chatItemTitle: { fontSize: 16, fontWeight: "600", color: "#333", marginBottom: 4 },
-  chatItemPreview: { fontSize: 14, color: "#666", marginBottom: 4 },
-  chatItemDate: { fontSize: 12, color: "#999" },
-  emptyState: { flex: 1, justifyContent: "center", alignItems: "center", paddingVertical: 40 },
-  emptyStateText: { fontSize: 16, color: "#666" },
-  userSection: { borderTopWidth: 1, borderTopColor: "#ffffff40", padding: 20, paddingBottom: 30 },
+
+  chatItemContent: { 
+    flex: 1 
+  },
+  chatItemTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  chatItemPreview: { 
+    fontSize: 14, 
+    color: "#666", 
+    marginBottom: 4 
+  },
+  chatItemDate: { 
+    fontSize: 12, 
+    color: "#999" 
+  },
+
+  // NEW: Delete button styles
+  deleteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#ffebee",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyStateText: { 
+    fontSize: 16, 
+    color: "#666" 
+  },
+  userSection: {
+    borderTopWidth: 1,
+    borderTopColor: "#ffffff40",
+    padding: 20,
+    paddingBottom: 30,
+  },
   userInfo: {
     flexDirection: "row",
     alignItems: "center",
@@ -278,7 +410,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  userEmail: { fontSize: 16, fontWeight: "500", color: "#333", flex: 1 },
+  userEmail: { 
+    fontSize: 16, 
+    fontWeight: "500", 
+    color: "#333", 
+    flex: 1 
+  },
   logoutButton: {
     borderRadius: 12,
     overflow: "hidden",
@@ -288,8 +425,18 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
-  logoutGradient: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, gap: 10 },
-  logoutText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  logoutGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    gap: 10,
+  },
+  logoutText: { 
+    color: "white", 
+    fontSize: 16, 
+    fontWeight: "bold" 
+  },
 });
 
 export default CustomDrawer;

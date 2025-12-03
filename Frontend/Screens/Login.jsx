@@ -45,7 +45,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://accounts-thru-courses-gods.trycloudflare.com/api/users/login",
+        "https://being-def-bolt-explained.trycloudflare.com/api/users/login",
         {
           method: "POST",
           headers: {
@@ -89,7 +89,7 @@ const Login = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://accounts-thru-courses-gods.trycloudflare.com/api/users/request-otp",
+        "https://being-def-bolt-explained.trycloudflare.com/api/users/request-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

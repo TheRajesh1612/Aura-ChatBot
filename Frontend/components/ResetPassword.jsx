@@ -47,7 +47,7 @@ const ResetPassword = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://accounts-thru-courses-gods.trycloudflare.com/api/users/reset-password",
+        "https://being-def-bolt-explained.trycloudflare.com/api/users/reset-password",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
