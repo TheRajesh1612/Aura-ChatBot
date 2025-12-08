@@ -41,7 +41,7 @@ const SignUP = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://being-def-bolt-explained.trycloudflare.com/api/users/signup",
+        "https://estate-progress-motorcycle-approved.trycloudflare.com/api/users/signup",
         {
           method: "POST",
           headers: {

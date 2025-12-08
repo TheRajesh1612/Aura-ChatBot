@@ -7,6 +7,8 @@ import {
   faCopy,
   faPenToSquare,
   faXmark,
+  faRobot,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   Image,
@@ -22,13 +24,15 @@ import {
   Alert,
   Modal,
   TouchableWithoutFeedback,
+  Animated,
+  FlatList,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { DrawerActions } from "@react-navigation/native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from 'expo-clipboard';
-import Markdown from 'react-native-markdown-display'; // NEW: Install with: npm install react-native-markdown-display
+import Markdown from 'react-native-markdown-display';
 
 function ChatPage() {
   const navigation = useNavigation();
@@ -52,129 +56,134 @@ function ChatPage() {
 
   const scrollViewRef = useRef();
 
-  // NEW: Markdown styles for bot messages
+  // NEW: Improved Markdown styles with better readability
   const markdownStyles = {
     body: {
-      color: 'white',
-      fontSize: 16,
-      lineHeight: 24,
+      color: '#2d3748',
+      fontSize: 15,
+      lineHeight: 22,
+    },
+    text: {
+      color: '#2d3748',
+      fontSize: 14,
+      fontWeight: 'small',
+      lineHeight: 22,
+    },
+    paragraph: {
+      marginBottom: 8,
     },
     heading1: {
-      fontSize: 24,
+      fontSize: 22,
       fontWeight: 'bold',
-      color: 'white',
-      marginTop: 10,
+      color: '#1a202c',
+      marginTop: 12,
       marginBottom: 8,
     },
     heading2: {
-      fontSize: 20,
+      fontSize: 19,
       fontWeight: 'bold',
-      color: 'white',
-      marginTop: 8,
+      color: '#1a202c',
+      marginTop: 10,
       marginBottom: 6,
     },
     heading3: {
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: '600',
-      color: 'white',
-      marginTop: 6,
-      marginBottom: 4,
-    },
-    paragraph: {
-      marginTop: 0,
-      marginBottom: 10,
-      color: 'white',
-      lineHeight: 22,
+      color: '#2d3748',
+      marginTop: 8,
+      marginBottom: 5,
     },
     strong: {
       fontWeight: 'bold',
-      color: 'white',
+      color: '#1a202c',
     },
     em: {
       fontStyle: 'italic',
-      color: 'white',
+      color: '#2d3748',
     },
     bullet_list: {
-      marginVertical: 8,
+      marginVertical: 6,
     },
     ordered_list: {
-      marginVertical: 8,
+      marginVertical: 6,
     },
     list_item: {
       flexDirection: 'row',
-      marginVertical: 4,
+      marginVertical: 3,
     },
     bullet_list_icon: {
-      color: 'white',
-      fontSize: 16,
+      color: '#4a5568',
+      fontSize: 14,
       marginRight: 8,
+      marginTop: 4,
     },
     ordered_list_icon: {
-      color: 'white',
-      fontSize: 16,
+      color: '#4a5568',
+      fontSize: 14,
       marginRight: 8,
     },
     code_inline: {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      color: '#ffeb3b',
+      backgroundColor: '#edf2f7',
+      color: '#d53f8c',
       paddingHorizontal: 6,
       paddingVertical: 2,
       borderRadius: 4,
       fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-      fontSize: 14,
+      fontSize: 13,
     },
     code_block: {
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      backgroundColor: '#2d3748',
+      color: '#f7fafc',
+      fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
       borderRadius: 8,
       padding: 12,
       marginVertical: 8,
-      borderLeftWidth: 3,
-      borderLeftColor: '#ffeb3b',
     },
     fence: {
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      backgroundColor: '#2d3748',
       borderRadius: 8,
       padding: 12,
       marginVertical: 8,
-      borderLeftWidth: 3,
-      borderLeftColor: '#ffeb3b',
     },
     blockquote: {
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: '#f7fafc',
       borderLeftWidth: 4,
-      borderLeftColor: '#ffeb3b',
+      borderLeftColor: '#7e57c2',
       paddingLeft: 12,
       paddingVertical: 8,
       marginVertical: 8,
+      borderRadius: 4,
     },
     link: {
-      color: '#ffeb3b',
+      color: '#7e57c2',
       textDecorationLine: 'underline',
     },
     hr: {
-      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+      backgroundColor: '#e2e8f0',
       height: 1,
       marginVertical: 12,
     },
     table: {
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.3)',
+      borderColor: '#e2e8f0',
       marginVertical: 8,
-      borderRadius: 4,
+      borderRadius: 6,
     },
     thead: {
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: '#f7fafc',
     },
     th: {
       padding: 8,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.3)',
+      borderColor: '#e2e8f0',
       fontWeight: 'bold',
+      color: '#2d3748',
     },
     td: {
       padding: 8,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.3)',
+      borderColor: '#e2e8f0',
+      color: '#2d3748',
     },
   };
 
@@ -218,13 +227,13 @@ function ChatPage() {
       const existing = await AsyncStorage.getItem(key);
       const parsed = existing ? JSON.parse(existing) : [];
       const existingIndex = parsed.findIndex(chat => chat.id === newChat.id);
-      
+
       if (existingIndex !== -1) {
         parsed[existingIndex] = newChat;
       } else {
         parsed.unshift(newChat);
       }
-      
+
       await AsyncStorage.setItem(key, JSON.stringify(parsed));
     } catch (e) {
       console.log('Error saving chat history', e);
@@ -275,10 +284,21 @@ function ChatPage() {
     setInputHeight(MIN_HEIGHT);
   };
 
+  // NEW: Format timestamp
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const handleSend = () => {
     if (inputText.trim() === "") return;
 
     const thisChatId = currentChatId;
+    const timestamp = Date.now();
 
     if (isEditing) {
       const userMessageId = editingMessageId;
@@ -287,17 +307,18 @@ function ChatPage() {
       setMessages((prev) => {
         const editIndex = prev.findIndex(msg => msg.id === editingMessageId);
         const updatedMessages = prev.slice(0, editIndex);
-        
+
         return [
           ...updatedMessages,
-          { 
-            text: inputText, 
-            sender: "user", 
+          {
+            text: inputText,
+            sender: "user",
             id: userMessageId,
+            timestamp: Date.now(),
             edited: true,
             editedAt: new Date().toISOString()
           },
-          { text: "Typing...", sender: "bot", id: typingId },
+          { text: "Typing...", sender: "bot", id: typingId, timestamp: Date.now() },
         ];
       });
 
@@ -310,7 +331,7 @@ function ChatPage() {
       setTimeout(async () => {
         try {
           const response = await fetch(
-            "https://being-def-bolt-explained.trycloudflare.com/chat",
+            "https://estate-progress-motorcycle-approved.trycloudflare.com/chat",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -326,10 +347,11 @@ function ChatPage() {
             const updated = prev.map((msg) =>
               msg.id === typingId
                 ? {
-                    text: data.text || "No response",
-                    sender: "bot",
-                    id: Date.now(),
-                  }
+                  text: data.text || "No response",
+                  sender: "bot",
+                  id: Date.now(),
+                  timestamp: Date.now(),
+                }
                 : msg
             );
 
@@ -357,8 +379,8 @@ function ChatPage() {
 
       setMessages((prev) => [
         ...prev,
-        { text: inputText, sender: "user", id: userMessageId },
-        { text: "Typing...", sender: "bot", id: typingId },
+        { text: inputText, sender: "user", id: userMessageId, timestamp },
+        { text: "Typing...", sender: "bot", id: typingId, timestamp: Date.now() },
       ]);
 
       const messageText = inputText;
@@ -368,7 +390,7 @@ function ChatPage() {
       setTimeout(async () => {
         try {
           const response = await fetch(
-            "https://being-def-bolt-explained.trycloudflare.com/chat",
+            "https://estate-progress-motorcycle-approved.trycloudflare.com/chat",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -384,10 +406,11 @@ function ChatPage() {
             const updated = prev.map((msg) =>
               msg.id === typingId
                 ? {
-                    text: data.text || "No response",
-                    sender: "bot",
-                    id: Date.now(),
-                  }
+                  text: data.text || "No response",
+                  sender: "bot",
+                  id: Date.now(),
+                  timestamp: Date.now(),
+                }
                 : msg
             );
 
@@ -430,44 +453,163 @@ function ChatPage() {
     };
   }, []);
 
-  // UPDATED: Message component with markdown support
+  // NEW: Typing indicator component
+  const TypingIndicator = () => {
+    const dot1 = useRef(new Animated.Value(0)).current;
+    const dot2 = useRef(new Animated.Value(0)).current;
+    const dot3 = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+      const animate = (dot, delay) => {
+        Animated.loop(
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.timing(dot, {
+              toValue: 1,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot, {
+              toValue: 0,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      };
+
+      animate(dot1, 0);
+      animate(dot2, 200);
+      animate(dot3, 400);
+    }, []);
+
+    return (
+      <View style={styles.typingContainer}>
+        <Animated.View
+          style={[
+            styles.typingDot,
+            {
+              opacity: dot1,
+              transform: [
+                {
+                  translateY: dot1.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -4],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.typingDot,
+            {
+              opacity: dot2,
+              transform: [
+                {
+                  translateY: dot2.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -4],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.typingDot,
+            {
+              opacity: dot3,
+              transform: [
+                {
+                  translateY: dot3.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -4],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+      </View>
+    );
+  };
+
+  // NEW: Improved Message component with avatars and timestamps
   const Message = ({ message }) => {
     const isUser = message.sender === "user";
     const isBot = message.sender === "bot";
-    
+    const isTyping = message.text === "Typing...";
+
     return (
-      <TouchableOpacity
-        onLongPress={() => handleLongPress(message)}
-        activeOpacity={0.8}
+      <View
         style={[
-          styles.messageRow,
-          isUser ? styles.userMessageRow : styles.botMessageRow,
+          styles.messageWrapper,
+          isUser ? styles.userMessageWrapper : styles.botMessageWrapper,
         ]}
       >
-        <View
+        {/* Bot Avatar (left, inline) */}
+        {isBot && (
+          <View style={styles.avatarContainer}>
+            <View style={styles.botAvatar}>
+              <FontAwesomeIcon icon={faRobot} size={18} color="#7e57c2" />
+            </View>
+          </View>
+        )}
+
+        {/* User Avatar (floating above, right) */}
+        {isUser && (
+          <View style={styles.userAvatarFloating}>
+            <View style={styles.userAvatar}>
+              <FontAwesomeIcon icon={faUser} size={16} color="white" />
+            </View>
+          </View>
+        )}
+
+        <TouchableOpacity
+          onLongPress={() => !isTyping && handleLongPress(message)}
+          activeOpacity={0.8}
           style={[
-            styles.messageBubble,
-            isUser ? styles.userMessageBubble : styles.botMessageBubble,
+            styles.messageContent,
+            isUser ? styles.userMessageContent : styles.botMessageContent,
           ]}
         >
-          {/* Render bot messages with Markdown, user messages as plain text */}
-          {isBot ? (
-            <Markdown style={markdownStyles}>
-              {message.text}
-            </Markdown>
-          ) : (
-            <Text style={styles.userMessageText}>
-              {message.text}
+          <View
+            style={[
+              styles.messageBubble,
+              isUser && styles.userMessageBubble,
+              isBot && (isTyping ? styles.botTypingBubble : styles.botMessageBubble),
+            ]}
+          >
+            {isTyping ? (
+              <TypingIndicator />
+            ) : isBot ? (
+              <Markdown style={markdownStyles}>{message.text}</Markdown>
+            ) : (
+              <Text style={styles.userMessageText}>{message.text}</Text>
+            )}
+
+            {message.edited && !isTyping && (
+              <Text style={[styles.editedIndicator, isUser && styles.editedIndicatorUser]}>
+                Edited
+              </Text>
+            )}
+          </View>
+
+
+          {/* Timestamp */}
+          {!isTyping && message.timestamp && (
+            <Text style={[styles.timestamp, isUser && styles.timestampUser]}>
+              {formatTime(message.timestamp)}
             </Text>
           )}
-          
-          {message.edited && (
-            <Text style={styles.editedIndicator}>Edited</Text>
-          )}
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
     );
   };
+
 
   const ActionModal = () => (
     <Modal
@@ -481,7 +623,7 @@ function ChatPage() {
           <TouchableWithoutFeedback>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Message Options</Text>
-              
+
               <TouchableOpacity
                 style={styles.modalOption}
                 onPress={handleCopyMessage}
@@ -516,19 +658,15 @@ function ChatPage() {
   const renderMessageArea = () => {
     if (message.length > 0) {
       return (
-        <ScrollView
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={false}
+        <FlatList
+          data={message}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => <Message message={item} />}
           ref={scrollViewRef}
-          style={styles.messageScrollView}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
           contentContainerStyle={styles.messageList}
-          keyboardShouldPersistTaps="handled"
-        >
-          {message.map((msg) => {
-            return <Message key={msg.id} message={msg} />;
-          })}
-          <View style={{ height: 30 }} />
-        </ScrollView>
+          showsVerticalScrollIndicator={false}
+        />
       );
     }
 
@@ -679,8 +817,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
+    // backgroundColor: "white",
     flex: 1,
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
     paddingBottom: 0,
     justifyContent: "flex-start",
   },
@@ -691,7 +830,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
+    // marginBottom: 20,
+    paddingHorizontal: 16,
   },
   chatTitle: {
     fontSize: 20,
@@ -714,7 +854,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 30,
-    paddingBottom: 40,
+    // paddingBottom: 40,
   },
   imageContainer: {
     width: 200,
@@ -755,6 +895,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingBottom: 10,
   },
   inputArea: {
     backgroundColor: "white",
@@ -802,63 +943,152 @@ const styles = StyleSheet.create({
   messageScrollView: {
     flex: 1,
     paddingTop: 10,
-    borderWidth: 0,
   },
   messageList: {
-    paddingHorizontal: 5,
+    paddingHorizontal: 0,
+    margin: 0,
     paddingBottom: 20,
   },
-  messageRow: {
-    flexDirection: "row",
-    marginVertical: 4,
-    maxWidth: "85%",
+  // NEW: Message wrapper with avatar layout
+  messageWrapper: {
+    marginVertical: 6,
+    paddingHorizontal: 16,
   },
-  userMessageRow: {
-    justifyContent: "flex-end",
-    alignSelf: "flex-end",
+  userMessageWrapper: {
+    alignItems: "flex-end",
+    position: "relative",  // 👈 so user avatar can float inside
+    paddingTop: 28,
   },
-  botMessageRow: {
+  botMessageWrapper: {
     justifyContent: "flex-start",
-    alignSelf: "flex-start",
+  },
+  // NEW: Avatar styles
+  avatarContainer: {
+    // marginHorizontal: 5,
+    marginBottom: 4,
+  },
+  botAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#f0e6ff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  userAvatarFloating: {
+    position: "absolute",
+    top: -5,
+    right: 16,             // match horizontal padding
+  },
+  userAvatar: {
+    alignSelf: "flex-end",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#7e57c2",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  // NEW: Message content wrapper
+  messageContent: {
+    flex: 1,
+  },
+  userMessageContent: {
+    width: '100%',
+    alignItems: "flex-end",
+  },
+  botMessageContent: {
+    alignItems: "flex-start",
+    alignSelf: 'stretch',
   },
   messageBubble: {
-    backgroundColor: "#7e57c2",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    maxWidth: "85%",
-    borderRadius: 18,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    flexShrink: 1,
-    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    maxWidth: "80%",
   },
   userMessageBubble: {
     backgroundColor: "#7e57c2",
-    borderBottomRightRadius: 5,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 4,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
   },
+  botTypingBubble: {
+    backgroundColor: "#f0e6ff5e",
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 16,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    // ❌ no width: "100%" here
+    // uses messageBubble maxWidth or natural content width
+  },
+
   botMessageBubble: {
-    backgroundColor: "#7e57c2",
-    borderTopLeftRadius: 5,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    maxWidth: "85%",
+    backgroundColor: "#f0e6ff81",
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 16,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    width: '100%',
+    maxWidth: '100%',
   },
   userMessageText: {
-    color: "white",
-    flexShrink: 1,
-    flexWrap: "wrap",
-    fontSize: 16,
+    color: "#fff",
+    fontSize: 14,
     lineHeight: 20,
-    textAlignVertical: "center",
+    fontWeight: "small",
   },
   editedIndicator: {
-    color: "rgba(255, 255, 255, 0.7)",
     fontSize: 11,
-    fontStyle: "italic",
+    color: "#999",
     marginTop: 4,
+    fontStyle: "italic",
+  },
+  editedIndicatorUser: {
+    color: "#ddd",
+  },
+  timestamp: {
+    fontSize: 11,
+    color: "#999",
+    marginTop: 3,
+  },
+  timestampUser: {
+    color: "#b39ddb",
+  },
+  typingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#7e57c2",
+  },
+  editModeBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff3e0",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#ff9800",
+  },
+  editModeInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  editModeText: {
+    color: "#e65100",
+    fontWeight: "600",
+    fontSize: 14,
   },
   modalOverlay: {
     flex: 1,
@@ -868,67 +1098,42 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
     width: "80%",
-    maxWidth: 350,
+    maxWidth: 300,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 10,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 20,
-    textAlign: "center",
+    marginBottom: 12,
   },
   modalOption: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    borderRadius: 12,
-    backgroundColor: "#f5f5f5",
-    marginBottom: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   modalOptionText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#333",
-    marginLeft: 15,
+    marginLeft: 12,
     fontWeight: "500",
   },
   modalCancelOption: {
-    backgroundColor: "#ffebee",
-    justifyContent: "center",
-    marginTop: 5,
+    marginTop: 4,
   },
   modalCancelText: {
-    fontSize: 16,
-    color: "#ff6b6b",
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  editModeBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#f0e6ff",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  editModeInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  editModeText: {
     fontSize: 14,
-    color: "#7e57c2",
+    color: "#e53935",
     fontWeight: "500",
   },
 });

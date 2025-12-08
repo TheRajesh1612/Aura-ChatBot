@@ -161,7 +161,7 @@ const CustomDrawer = (props) => {
           onPress: async () => {
             try {
               await fetch(
-                "https://being-def-bolt-explained.trycloudflare.com/api/users/logout",
+                "https://estate-progress-motorcycle-approved.trycloudflare.com/api/users/logout",
                 {
                   method: "POST",
                   credentials: "include",
