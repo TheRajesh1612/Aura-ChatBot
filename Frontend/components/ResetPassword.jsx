@@ -47,7 +47,7 @@ const ResetPassword = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://estate-progress-motorcycle-approved.trycloudflare.com/api/users/reset-password",
+        "https://lou-ana-tracy-dose.trycloudflare.com/api/users/reset-password",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

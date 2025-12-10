@@ -45,7 +45,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://estate-progress-motorcycle-approved.trycloudflare.com/api/users/login",
+        "https://lou-ana-tracy-dose.trycloudflare.com/api/users/login",
         {
           method: "POST",
           headers: {
@@ -89,7 +89,7 @@ const Login = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://estate-progress-motorcycle-approved.trycloudflare.com/api/users/request-otp",
+        "https://lou-ana-tracy-dose.trycloudflare.com/api/users/request-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -317,8 +317,7 @@ const styles = StyleSheet.create({
   input1: {
     width: "100%",
     height: 60,
-    // backgroundColor: "white",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "#ffffff",
     borderStyle: "solid",
     borderRadius: 10,
@@ -327,13 +326,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 1)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-    // gap: 10,
+    backgroundColor: "#e3dbfbdc",
+    boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
   },
   input2: {
     width: "90%",
@@ -354,15 +348,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderWidth: 2,
     borderColor: "#ffffff",
-    backgroundColor: "rgba(255, 255, 255, 1)",
+    backgroundColor: "#e3dbfbdc",
     borderStyle: "solid",
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-    // backgroundColor: "white",
+    boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
   },
   continueButton: {
     width: "100%",
@@ -383,14 +372,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     fontFamily: "sans-serif",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-    // borderWidth: 2,
-    // borderStyle: "solid",
-    // borderColor: "#cccccc98"
+    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
   },
   forgotText: {
     color: "#4B2FB6",

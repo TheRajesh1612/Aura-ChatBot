@@ -170,11 +170,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.3)",
   },
   Button: {
     width: "100%",

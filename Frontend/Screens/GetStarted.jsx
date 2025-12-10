@@ -250,11 +250,7 @@ const styles = StyleSheet.create({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
   },
   button2: {
     display: "flex",

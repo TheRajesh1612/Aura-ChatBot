@@ -31,7 +31,7 @@ const OTPVerification = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://estate-progress-motorcycle-approved.trycloudflare.com/api/users/verify-otp",
+        "https://lou-ana-tracy-dose.trycloudflare.com/api/users/verify-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -58,7 +58,7 @@ const OTPVerification = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://estate-progress-motorcycle-approved.trycloudflare.com/api/users/request-otp",
+        "https://lou-ana-tracy-dose.trycloudflare.com/api/users/request-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -331,7 +331,7 @@ function ChatPage() {
       setTimeout(async () => {
         try {
           const response = await fetch(
-            "https://estate-progress-motorcycle-approved.trycloudflare.com/chat",
+            "https://lou-ana-tracy-dose.trycloudflare.com/chat",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -390,7 +390,7 @@ function ChatPage() {
       setTimeout(async () => {
         try {
           const response = await fetch(
-            "https://estate-progress-motorcycle-approved.trycloudflare.com/chat",
+            "https://lou-ana-tracy-dose.trycloudflare.com/chat",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -658,15 +658,39 @@ function ChatPage() {
   const renderMessageArea = () => {
     if (message.length > 0) {
       return (
-        <FlatList
-          data={message}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <Message message={item} />}
-          ref={scrollViewRef}
-          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-          contentContainerStyle={styles.messageList}
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={styles.messageAreaContainer}>
+          <FlatList
+            data={message}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={({ item }) => <Message message={item} />}
+            ref={scrollViewRef}
+            onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+            contentContainerStyle={styles.messageListContent}
+            showsVerticalScrollIndicator={false}
+            contentInset={{ top: 70 }} // For iOS - space for floating header
+            contentOffset={{ x: 0, y: -70 }} // For iOS - start below header
+          />
+
+          {/* Top fade gradient */}
+          <LinearGradient
+            colors={['rgba(219, 207, 255, 1)', 'rgba(219, 207, 255, 0.9)', 'rgba(219, 207, 255, 0.6)', 'transparent']}
+            style={styles.topFadeOverlay}
+            pointerEvents="none"
+          />
+
+          {/* Bottom fade gradient */}
+          <LinearGradient
+            colors={[
+              'transparent',
+              'rgba(219, 207, 255, 0.3)',
+              'rgba(219, 207, 255, 0.6)',
+              'rgba(219, 207, 255, 0.85)',
+              'rgba(219, 207, 255, 1)'
+            ]}
+            style={styles.bottomFadeOverlay}
+            pointerEvents="none"
+          />
+        </View>
       );
     }
 
@@ -692,6 +716,7 @@ function ChatPage() {
     return null;
   };
 
+
   return (
     <View style={styles.rootView}>
       <LinearGradient
@@ -708,21 +733,18 @@ function ChatPage() {
       >
         <KeyboardAvoidingView
           style={styles.keyboardAvoidingView}
-          behavior={Platform.OS === "android" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={0}
         >
           <View style={styles.container}>
-            <View style={styles.sidebar}>
+            {/* Floating Sidebar */}
+            <View style={styles.floatingSidebar}>
               <TouchableOpacity
                 style={styles.sidebarButton}
                 onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
               >
                 <FontAwesomeIcon icon={faBars} style={styles.icon} size={20} />
               </TouchableOpacity>
-
-              <Text style={styles.chatTitle}>
-                {isEditing ? "Editing Message" : "New Chat"}
-              </Text>
 
               <TouchableOpacity
                 style={styles.sidebarButton}
@@ -743,7 +765,8 @@ function ChatPage() {
             {renderMessageArea()}
           </View>
 
-          <View style={styles.inputContainer}>
+          {/* Floating Input Container - MOVED OUTSIDE MAIN CONTAINER */}
+          <View style={styles.floatingInputContainer}>
             {isEditing && (
               <View style={styles.editModeBar}>
                 <View style={styles.editModeInfo}>
@@ -799,6 +822,7 @@ function ChatPage() {
       <ActionModal />
     </View>
   );
+
 }
 
 export default ChatPage;
@@ -811,27 +835,61 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     flex: 1,
-    paddingTop: 60,
+    // paddingTop: 30,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
   container: {
-    // backgroundColor: "white",
     flex: 1,
-    // paddingHorizontal: 20,
     paddingBottom: 0,
     justifyContent: "flex-start",
+    position: "relative"
   },
-  sidebar: {
-    width: "100%",
-    height: 60,
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    // marginBottom: 20,
+  floatingSidebar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 70,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
+    paddingTop: 50,
+    zIndex: 1000,
+    backgroundColor: 'transparent',
+  },
+  messageAreaContainer: {
+    flex: 1,
+    position: 'relative',
+    top: 0,
+    left: 0,
+    right: 0
+  },
+  messageListContent: {
+    paddingTop: 80, // Space for floating header (70px header + 10px padding)
+    paddingBottom: 100,
+    paddingHorizontal: 0,
+  },
+  topFadeOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 60, // Increased for better fade effect
+    zIndex: 999,
+    pointerEvents: 'none',
+  },
+
+  bottomFadeOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100, // Increased to cover input area
+    zIndex: 999,
+    pointerEvents: 'none',
   },
   chatTitle: {
     fontSize: 20,
@@ -839,7 +897,8 @@ const styles = StyleSheet.create({
     color: "#222",
   },
   sidebarButton: {
-    padding: 12,
+    backgroundColor: "#f6f4f8e6",
+    padding: 10,
     borderWidth: 1,
     borderColor: "#ffffff",
     borderRadius: 14,
@@ -892,25 +951,26 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: "#333",
   },
-  inputContainer: {
-    paddingHorizontal: 16,
+  floatingInputContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 8,
     paddingVertical: 12,
-    paddingBottom: 10,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    zIndex: 1000,
+    backgroundColor: 'transparent',
   },
   inputArea: {
-    backgroundColor: "white",
+    backgroundColor: "#fff",
     alignItems: "flex-end",
     flexDirection: "row",
     paddingHorizontal: 8,
     paddingVertical: 8,
-    borderRadius: 25,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: "#e5e5ea",
+    borderRadius: 28,
+    boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+    outlineStyle: "none",
   },
   input: {
     flex: 1,
@@ -968,8 +1028,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   botAvatar: {
-    width: 32,
-    height: 32,
+    width: 25,
+    height: 25,
     borderRadius: 16,
     backgroundColor: "#f0e6ff",
     justifyContent: "center",
@@ -982,8 +1042,8 @@ const styles = StyleSheet.create({
   },
   userAvatar: {
     alignSelf: "flex-end",
-    width: 32,
-    height: 32,
+    width: 25,
+    height: 25,
     borderRadius: 16,
     backgroundColor: "#7e57c2",
     justifyContent: "center",
@@ -1025,13 +1085,16 @@ const styles = StyleSheet.create({
   },
 
   botMessageBubble: {
-    backgroundColor: "#f0e6ff81",
+    backgroundColor: "#f0e6ff3c",
     borderTopLeftRadius: 4,
     borderTopRightRadius: 16,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
     width: '100%',
     maxWidth: '100%',
+    borderColor: "#eaeaeaff",
+    borderWidth: 1.5,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
   },
   userMessageText: {
     color: "#fff",

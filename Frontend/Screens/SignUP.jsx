@@ -41,7 +41,7 @@ const SignUP = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://estate-progress-motorcycle-approved.trycloudflare.com/api/users/signup",
+        "https://lou-ana-tracy-dose.trycloudflare.com/api/users/signup",
         {
           method: "POST",
           headers: {
@@ -309,12 +309,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 1)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+    backgroundColor: "#e3dbfbdc",
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
     // gap: 10,
   },
   input2: {
@@ -336,15 +332,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderWidth: 2,
     borderColor: "#ffffff",
-    backgroundColor: "rgba(255, 255, 255, 1)",
+    backgroundColor: "#e3dbfbdc",
     borderStyle: "solid",
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-    // backgroundColor: "white",
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
   },
   continueButton: {
     width: "100%",
@@ -365,14 +356,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     fontFamily: "sans-serif",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-    // borderWidth: 2,
-    // borderStyle: "solid",
-    // borderColor: "#cccccc98"
+    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.35)",
   },
 });
 
