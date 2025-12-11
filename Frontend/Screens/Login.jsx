@@ -62,7 +62,7 @@ const Login = () => {
       console.log("login response:", data);
       if (data.success === true) {
         Alert.alert("Success", data.message || "Logged in");
-        navigation.navigate("ChatDrawer", { screen: "ChatPage", params: { email: formData.email, mode: "new"} });
+        navigation.navigate("ChatDrawer", { screen: "ChatPage", params: { email: formData.email, mode: "new" } });
       } else {
         Alert.alert("Login failed", data.message || "Invalid credentials");
       }
@@ -86,32 +86,71 @@ const Login = () => {
       return;
     }
 
+    setLoading(true);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15s
+
     try {
-      setLoading(true);
       const res = await fetch(
         "https://aura-2kph.onrender.com/api/users/request-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: formData.email }),
+          signal: controller.signal,
         }
       );
-      const data = await res.json();
+
+      clearTimeout(timeout);
+
+      // handle non-2xx
+      if (!res.ok) {
+        // try to get error message from body (json or text)
+        let errMsg = `Server returned ${res.status}`;
+        try {
+          const txt = await res.text();
+          // try parse json if possible
+          try {
+            const parsed = JSON.parse(txt);
+            errMsg = parsed.message || JSON.stringify(parsed);
+          } catch {
+            if (txt) errMsg = txt;
+          }
+        } catch { }
+        Alert.alert("Request failed", errMsg);
+        return;
+      }
+
+      // parse JSON safely
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        Alert.alert("Response parse error", "Server returned unexpected response");
+        console.error("parse error:", e);
+        return;
+      }
+
       console.log("request-otp:", data);
       if (data.success) {
         Alert.alert("OTP Sent", data.message || "An OTP has been sent to your email");
-        // Navigate to OTP verification screen and pass email
         navigation.navigate("OTPVerification", { email: formData.email });
       } else {
-        Alert.alert("Failed", data.message || "Could not send OTP");
+        Alert.alert("Failed to send OTP", data.message || "Please try again");
       }
     } catch (err) {
-      console.error(err);
-      Alert.alert("Error", err.message || "Something went wrong");
+      if (err.name === "AbortError") {
+        Alert.alert("Timeout", "Server took too long. Try again.");
+      } else {
+        console.error(err);
+        Alert.alert("Network/Error", err.message || "Something went wrong");
+      }
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   };
+
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

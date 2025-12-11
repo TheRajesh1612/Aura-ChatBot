@@ -2,6 +2,8 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const { log } = require("console");
 const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Store OTPs temporarily (in production, use Redis or a database)
 const otpStore = new Map();
@@ -120,74 +122,135 @@ const logoutUser = async (req, res) => {
   }
 };
 
-
 // Request OTP for password reset
+// const requestOTP = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+//     console.log("Request OTP for email:", email);
+
+//     if (!email) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Email is required!",
+//       });
+//     }
+
+//     // Check if user exists
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found with this email!",
+//       });
+//     }
+
+//     // Generate 6-digit OTP
+//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+//     console.log("Generated OTP:", otp);
+
+//     // Store OTP with expiration (10 minutes)
+//     otpStore.set(email, {
+//       otp: otp,
+//       expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+//     });
+
+//     console.log("Attempting to send OTP email to:", email);
+//     console.log("EMAIL_USER:", process.env.EMAIL_USER);
+//     console.log("EMAIL_PASSWORD exists:", !!process.env.EMAIL_PASSWORD);
+
+//     // Send OTP via email
+//     // const mailOptions = {
+//     //   from: "no-reply@aura.com",
+//     //   to: email,
+//     //   subject: "Login OTP",
+//     //   html: `
+//     //     <h2>Login Request</h2>
+//     //     <p>Your OTP for login is: <strong>${otp}</strong></p>
+//     //     <p>This OTP will expire in 10 minutes.</p>
+//     //     <p>If you didn't request this, please ignore this email.</p>
+//     //   `,
+//     // };
+
+//     const sendOtpWithResend = async (to, otp) => {
+//       const from = process.env.RESEND_SENDER || "onboarding@resend.dev";
+//       return resend.emails.send({
+//         from: `Aura <${from}>`,
+//         to,
+//         subject: "Your Aura OTP",
+//         html: `
+//       <h2>Login Request</h2>
+//       <p>Your OTP for login is: <strong>${otp}</strong></p>
+//       <p>This OTP will expire in 10 minutes.</p>
+//       <p>If you didn't request this, please ignore this email.</p>
+//     `,
+//       });
+//     };
+
+//     await transporter.sendMail(mailOptions);
+//     console.log("OTP sent successfully to:", email);
+
+//     res.status(200).json({
+//       success: true,
+//       message: "OTP sent successfully to your email!",
+//     });
+//   } catch (error) {
+//     console.error("Error sending OTP:", error);
+//     console.log("Error code:", error.code);
+//     console.log("Error message:", error.message);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to send OTP. Please try again.",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const requestOTP = async (req, res) => {
   try {
     const { email } = req.body;
     console.log("Request OTP for email:", email);
 
     if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required!",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email is required!" });
     }
 
-    // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found with this email!",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found with this email!" });
     }
 
-    // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     console.log("Generated OTP:", otp);
 
-    // Store OTP with expiration (10 minutes)
-    otpStore.set(email, {
-      otp: otp,
-      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
-    });
+    otpStore.set(email, { otp, expiresAt: Date.now() + 10 * 60 * 1000 }); // 10 min
 
-    console.log("Attempting to send OTP email to:", email);
-    console.log("EMAIL_USER:", process.env.EMAIL_USER);
-    console.log("EMAIL_PASSWORD exists:", !!process.env.EMAIL_PASSWORD);
-
-
-    // Send OTP via email
-    const mailOptions = {
-      from: "no-reply@aura.com",
-      to: email,
-      subject: "Login OTP",
-      html: `
-        <h2>Login Request</h2>
-        <p>Your OTP for login is: <strong>${otp}</strong></p>
-        <p>This OTP will expire in 10 minutes.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log("OTP sent successfully to:", email);
-
-
-    res.status(200).json({
-      success: true,
-      message: "OTP sent successfully to your email!",
-    });
+    try {
+      await sendOtpWithResend(email, otp);
+      console.log("OTP sent successfully via Resend to:", email);
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "OTP sent successfully to your email!",
+        });
+    } catch (sendErr) {
+      console.error(
+        "Resend send error:",
+        sendErr && sendErr.response ? sendErr.response : sendErr
+      );
+      return res.status(502).json({
+        success: false,
+        message: "Failed to send OTP. Please try again.",
+        error: (sendErr && sendErr.message) || "Resend send failed",
+      });
+    }
   } catch (error) {
-    console.error("Error sending OTP:", error);
-    console.log("Error code:", error.code);
-    console.log("Error message:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Failed to send OTP. Please try again.",
-      error: error.message,
-    });
+    console.error("requestOTP error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -255,7 +318,11 @@ const resetPassword = async (req, res) => {
     // Verify OTP again
     const storedOTP = otpStore.get(email);
 
-    if (!storedOTP || storedOTP.otp !== otp || Date.now() > storedOTP.expiresAt) {
+    if (
+      !storedOTP ||
+      storedOTP.otp !== otp ||
+      Date.now() > storedOTP.expiresAt
+    ) {
       return res.status(400).json({
         success: false,
         message: "Invalid or expired OTP!",
