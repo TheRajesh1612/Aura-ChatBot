@@ -45,7 +45,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://lou-ana-tracy-dose.trycloudflare.com/api/users/login",
+        "https://aura-2kph.onrender.com/api/users/login",
         {
           method: "POST",
           headers: {
@@ -89,7 +89,7 @@ const Login = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://lou-ana-tracy-dose.trycloudflare.com/api/users/request-otp",
+        "https://aura-2kph.onrender.com/api/users/request-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -331,7 +331,7 @@ function ChatPage() {
       setTimeout(async () => {
         try {
           const response = await fetch(
-            "https://lou-ana-tracy-dose.trycloudflare.com/chat",
+            "https://aura-2kph.onrender.com/chat",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -390,7 +390,7 @@ function ChatPage() {
       setTimeout(async () => {
         try {
           const response = await fetch(
-            "https://lou-ana-tracy-dose.trycloudflare.com/chat",
+            "https://aura-2kph.onrender.com/chat",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },

@@ -41,7 +41,7 @@ const SignUP = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://lou-ana-tracy-dose.trycloudflare.com/api/users/signup",
+        "https://aura-2kph.onrender.com/api/users/signup",
         {
           method: "POST",
           headers: {

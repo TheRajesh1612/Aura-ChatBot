@@ -161,7 +161,7 @@ const CustomDrawer = (props) => {
           onPress: async () => {
             try {
               await fetch(
-                "https://lou-ana-tracy-dose.trycloudflare.com/api/users/logout",
+                "https://aura-2kph.onrender.com/api/users/logout",
                 {
                   method: "POST",
                   credentials: "include",
